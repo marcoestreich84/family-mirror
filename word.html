@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      body {
+        font-family: sans-serif;
+        text-align: left;
+        padding: 10px 30px;
+        color: white;
+      }
+      .word {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin-bottom: 0;
+      }
+      .pronunciation {
+        font-size: 1.2em;
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-style: italic;
+        color: #ccc;
+      }
+      .definition {
+        font-size: 1.5em;
+        color: #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="content">Loading...</div>
+
+    <script>
+      const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTkoIqEqmZNj1ois0sP0uKJ2C3weNvm8GzTjSs1eIRMCVAyX9_eNerBZTHANcdDXZ-3ZKt7BFHs2o7T/pub?gid=0&single=true&output=csv";
+
+      fetch(SHEET_URL)
+        .then(response => response.text())
+        .then(csv => {
+          const rows = csv.trim().split("\n").map(r => r.split(","));
+          const headers = rows[0];
+          const dataRows = rows.slice(1);
+
+          const isCurrentIndex = headers.indexOf("is_current");
+          const wordIndex = headers.indexOf("word");
+          const pronunciationIndex = headers.indexOf("pronounciation");
+          const definitionIndex = headers.indexOf("definition");
+
+          const currentRow = dataRows.find(row => row[isCurrentIndex].toLowerCase() === "true");
+
+          if (currentRow) {
+            const word = currentRow[wordIndex];
+            const pronunciation = currentRow[pronunciationIndex];
+            const definition = currentRow[definitionIndex];
+
+            document.getElementById("content").innerHTML = `
+              <div class="word">${word}</div>
+              <div class="pronunciation">(${pronunciation})</div>
+              <div class="definition">${definition}</div>
+            `;
+          } else {
+            document.getElementById("content").innerText = "No current word found.";
+          }
+        })
+        .catch(err => {
+          document.getElementById("content").innerText = "Error loading word.";
+          console.error(err);
+        });
+    </script>
+  </body>
+</html>

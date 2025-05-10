@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      body {
+        margin: 0;
+        padding: 0 20px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+      }
+      .name {
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+      .line {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="content">Loading...</div>
+
+    <script>
+      const ticketsURL = "https://corsproxy.io/?https://docs.google.com/spreadsheets/d/e/2PACX-1vTkoIqEqmZNj1ois0sP0uKJ2C3weNvm8GzTjSs1eIRMCVAyX9_eNerBZTHANcdDXZ-3ZKt7BFHs2o7T/pub?gid=972557606&single=true&output=csv";
+      const wordsURL = "https://corsproxy.io/?https://docs.google.com/spreadsheets/d/e/2PACX-1vTkoIqEqmZNj1ois0sP0uKJ2C3weNvm8GzTjSs1eIRMCVAyX9_eNerBZTHANcdDXZ-3ZKt7BFHs2o7T/pub?gid=0&single=true&output=csv";
+
+      Promise.all([
+        fetch(ticketsURL).then(res => res.text()),
+        fetch(wordsURL).then(res => res.text())
+      ])
+      .then(([ticketsCSV, wordsCSV]) => {
+        const parseCSV = csv =>
+          csv.trim().split("\n").map(row => row.split(",").map(cell => cell.replace(/"/g, '').trim()));
+
+        const ticketsRows = parseCSV(ticketsCSV);
+        const wordsRows = parseCSV(wordsCSV);
+
+        const ticketHeaders = ticketsRows[0].map(h => h.toLowerCase());
+        const ticketData = ticketsRows.slice(1);
+
+        const wordHeaders = wordsRows[0].map(h => h.toLowerCase());
+        const wordData = wordsRows.slice(1);
+
+        const ticketsNameIndex = ticketHeaders.indexOf("name");
+        const ticketsCountIndex = ticketHeaders.indexOf("tickets");
+
+        const wordIsCurrentIndex = wordHeaders.indexOf("is_current");
+        const wordGrangerIndex = wordHeaders.indexOf("granger");
+
+        const grangerTicketsRow = ticketData.find(r => r[ticketsNameIndex].toLowerCase() === "granger");
+        const grangerTicketCount = grangerTicketsRow ? grangerTicketsRow[ticketsCountIndex] : "—";
+
+        const currentWordRow = wordData.find(r => {
+          const val = r[wordIsCurrentIndex];
+          return val && val.toString().toLowerCase().includes("true");
+        });
+        const grangerWordsUsed = currentWordRow ? currentWordRow[wordGrangerIndex] : "—";
+
+        document.getElementById("content").innerHTML = `
+          <div class="name">Granger</div>
+          <div class="line">${grangerTicketCount} tickets</div>
+          <div class="line">${grangerWordsUsed} words</div>
+        `;
+      })
+      .catch(err => {
+        document.getElementById("content").innerText = "Error loading data.";
+        console.error(err);
+      });
+    </script>
+  </body>
+</html>

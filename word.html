@@ -45,7 +45,10 @@
           const pronunciationIndex = headers.indexOf("pronounciation");
           const definitionIndex = headers.indexOf("definition");
 
-          const currentRow = dataRows.find(row => row[isCurrentIndex].toLowerCase() === "true");
+          const currentRow = dataRows.find(row => {
+            const val = row[isCurrentIndex];
+            return val && val.toString().toLowerCase().includes("true");
+          });
 
           if (currentRow) {
             const word = currentRow[wordIndex];
